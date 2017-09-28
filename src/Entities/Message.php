@@ -32,7 +32,7 @@ namespace Longman\TelegramBot\Entities;
  * @method Sticker      getSticker()               Optional. Message is a sticker, information about the sticker
  * @method Video        getVideo()                 Optional. Message is a video, information about the video
  * @method Voice        getVoice()                 Optional. Message is a voice message, information about the file
- * @method Video Note   getVideoNote()             Optional. Message is a video note message, information about the video
+ * @method VideoNote    getVideoNote()             Optional. Message is a video note message, information about the video
  * @method string       getCaption()               Optional. Caption for the document, photo or video, 0-200 characters
  * @method Contact      getContact()               Optional. Message is a shared contact, information about the contact
  * @method Location     getLocation()              Optional. Message is a shared location, information about the location
@@ -159,48 +159,47 @@ class Message extends Entity
     public function getFullCommand()
     {
         $text = $this->getProperty('text');
-        if (strpos($text, '/') === 0) {
-            $no_EOL = strtok($text, PHP_EOL);
-            $no_space = strtok($text, ' ');
-
-            //try to understand which separator \n or space divide /command from text
-            return strlen($no_space) < strlen($no_EOL) ? $no_space : $no_EOL;
+        if (strpos($text, '/') !== 0) {
+            return null;
         }
 
-        return null;
+        $no_EOL   = strtok($text, PHP_EOL);
+        $no_space = strtok($text, ' ');
+
+        //try to understand which separator \n or space divide /command from text
+        return strlen($no_space) < strlen($no_EOL) ? $no_space : $no_EOL;
     }
 
     /**
      * Get command
      *
-     * @return bool|string
+     * @return string|null
      */
     public function getCommand()
     {
-        $command = $this->getProperty('command');
-        if (!empty($command)) {
+        if ($command = $this->getProperty('command')) {
             return $command;
         }
 
         $full_command = $this->getFullCommand();
+        if (strpos($full_command, '/') !== 0) {
+            return false;
+        }
+        $full_command = substr($full_command, 1);
 
-        if (strpos($full_command, '/') === 0) {
-            $full_command = substr($full_command, 1);
-
-            //check if command is follow by botname
-            $split_cmd = explode('@', $full_command);
-            if (isset($split_cmd[1])) {
-                //command is followed by name check if is addressed to me
-                if (strtolower($split_cmd[1]) === strtolower($this->getBotUsername())) {
-                    return $split_cmd[0];
-                }
-            } else {
-                //command is not followed by name
-                return $full_command;
-            }
+        //check if command is followed by bot username
+        $split_cmd = explode('@', $full_command);
+        if (!isset($split_cmd[1])) {
+            //command is not followed by name
+            return $full_command;
         }
 
-        return false;
+        if (strtolower($split_cmd[1]) === strtolower($this->getBotUsername())) {
+            //command is addressed to me
+            return $split_cmd[0];
+        }
+
+        return null;
     }
 
     /**
