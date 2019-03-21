@@ -10,6 +10,7 @@
 
 namespace Longman\TelegramBot\Tests\Unit;
 
+use Longman\TelegramBot\Entities\Games\CallbackGame;
 use Longman\TelegramBot\Entities\InlineKeyboardButton;
 
 /**
@@ -32,7 +33,7 @@ class InlineKeyboardButtonTest extends TestCase
 
     /**
      * @expectedException \Longman\TelegramBot\Exception\TelegramException
-     * @expectedExceptionMessage You must use only one of these fields: url, callback_data, switch_inline_query, switch_inline_query_current_chat, pay!
+     * @expectedExceptionMessage You must use only one of these fields: url, callback_data, switch_inline_query, switch_inline_query_current_chat, callback_game, pay!
      */
     public function testInlineKeyboardButtonNoParameterFail()
     {
@@ -41,7 +42,7 @@ class InlineKeyboardButtonTest extends TestCase
 
     /**
      * @expectedException \Longman\TelegramBot\Exception\TelegramException
-     * @expectedExceptionMessage You must use only one of these fields: url, callback_data, switch_inline_query, switch_inline_query_current_chat, pay!
+     * @expectedExceptionMessage You must use only one of these fields: url, callback_data, switch_inline_query, switch_inline_query_current_chat, callback_game, pay!
      */
     public function testInlineKeyboardButtonTooManyParametersFail()
     {
@@ -78,6 +79,13 @@ class InlineKeyboardButtonTest extends TestCase
                 new InlineKeyboardButton([
                     'text'          => 'message',
                     'callback_data' => 'callback_data_value',
+                    'callback_game' => new CallbackGame([]),
+                ]);
+            },
+            function () {
+                new InlineKeyboardButton([
+                    'text'          => 'message',
+                    'callback_data' => 'callback_data_value',
                     'pay'           => true,
                 ]);
             },
@@ -91,7 +99,10 @@ class InlineKeyboardButtonTest extends TestCase
         new InlineKeyboardButton(['text' => 'message', 'url' => 'url_value']);
         new InlineKeyboardButton(['text' => 'message', 'callback_data' => 'callback_data_value']);
         new InlineKeyboardButton(['text' => 'message', 'switch_inline_query' => 'switch_inline_query_value']);
+        new InlineKeyboardButton(['text' => 'message', 'switch_inline_query' => '']); // Allow empty string.
         new InlineKeyboardButton(['text' => 'message', 'switch_inline_query_current_chat' => 'switch_inline_query_current_chat_value']);
+        new InlineKeyboardButton(['text' => 'message', 'switch_inline_query_current_chat' => '']); // Allow empty string.
+        new InlineKeyboardButton(['text' => 'message', 'callback_game' => new CallbackGame([])]);
         new InlineKeyboardButton(['text' => 'message', 'pay' => true]);
     }
 
@@ -110,6 +121,9 @@ class InlineKeyboardButtonTest extends TestCase
             ['text' => 'message', 'switch_inline_query_current_chat' => 'switch_inline_query_current_chat_value']
         ));
         self::assertTrue(InlineKeyboardButton::couldBe(
+            ['text' => 'message', 'callback_game' => new CallbackGame([])]
+        ));
+        self::assertTrue(InlineKeyboardButton::couldBe(
             ['text' => 'message', 'pay' => true]
         ));
 
@@ -122,6 +136,7 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertFalse(InlineKeyboardButton::couldBe(
             ['switch_inline_query' => 'switch_inline_query_value']
         ));
+        self::assertFalse(InlineKeyboardButton::couldBe(['callback_game' => new CallbackGame([])]));
         self::assertFalse(InlineKeyboardButton::couldBe(['pay' => true]));
 
         self::assertFalse(InlineKeyboardButton::couldBe([
@@ -129,6 +144,7 @@ class InlineKeyboardButtonTest extends TestCase
             'callback_data'                    => 'callback_data_value',
             'switch_inline_query'              => 'switch_inline_query_value',
             'switch_inline_query_current_chat' => 'switch_inline_query_current_chat_value',
+            'callback_game'                    => new CallbackGame([]),
             'pay'                              => true,
         ]));
     }
@@ -140,6 +156,7 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertEmpty($button->getCallbackData());
         self::assertEmpty($button->getSwitchInlineQuery());
         self::assertEmpty($button->getSwitchInlineQueryCurrentChat());
+        self::assertEmpty($button->getCallbackGame());
         self::assertEmpty($button->getPay());
 
         $button->setCallbackData('callback_data_value');
@@ -147,6 +164,7 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertSame('callback_data_value', $button->getCallbackData());
         self::assertEmpty($button->getSwitchInlineQuery());
         self::assertEmpty($button->getSwitchInlineQueryCurrentChat());
+        self::assertEmpty($button->getCallbackGame());
         self::assertEmpty($button->getPay());
 
         $button->setSwitchInlineQuery('switch_inline_query_value');
@@ -154,6 +172,7 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertEmpty($button->getCallbackData());
         self::assertSame('switch_inline_query_value', $button->getSwitchInlineQuery());
         self::assertEmpty($button->getSwitchInlineQueryCurrentChat());
+        self::assertEmpty($button->getCallbackGame());
         self::assertEmpty($button->getPay());
 
         $button->setSwitchInlineQueryCurrentChat('switch_inline_query_current_chat_value');
@@ -161,6 +180,15 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertEmpty($button->getCallbackData());
         self::assertEmpty($button->getSwitchInlineQuery());
         self::assertSame('switch_inline_query_current_chat_value', $button->getSwitchInlineQueryCurrentChat());
+        self::assertEmpty($button->getCallbackGame());
+        self::assertEmpty($button->getPay());
+
+        $button->setCallbackGame($callback_game = new CallbackGame([]));
+        self::assertEmpty($button->getUrl());
+        self::assertEmpty($button->getCallbackData());
+        self::assertEmpty($button->getSwitchInlineQuery());
+        self::assertEmpty($button->getSwitchInlineQueryCurrentChat());
+        self::assertSame($callback_game, $button->getCallbackGame());
         self::assertEmpty($button->getPay());
 
         $button->setPay(true);
@@ -168,6 +196,7 @@ class InlineKeyboardButtonTest extends TestCase
         self::assertEmpty($button->getCallbackData());
         self::assertEmpty($button->getSwitchInlineQuery());
         self::assertEmpty($button->getSwitchInlineQueryCurrentChat());
-        self::assertSame(true, $button->getPay());
+        self::assertEmpty($button->getCallbackGame());
+        self::assertTrue($button->getPay());
     }
 }

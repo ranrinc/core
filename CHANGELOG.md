@@ -11,6 +11,61 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 ### Fixed
 ### Security
 
+## [0.55.1] - 2019-01-06
+### Added
+- Add missing `Request::editMessageMedia()` and `CallbackQuery::getChatInstance()` methods.
+### Fixed
+- Return correct message type.
+
+## [0.55.0] - 2018-12-20
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.55.0-sql-migration] on your database.
+### Added
+- Bot API 4.0 and 4.1 (Telegram Passport)
+- Test PHP 7.3 with Travis.
+### Changed
+- [:exclamation:][0.55.0-bc-move-animation-out-of-games-namespace] Move Animation entity out of Games namespace.
+### Fixed
+- Added missing `video_note` to `Message` types.
+
+## [0.54.1] - 2018-10-23
+### Fixed
+- `sendToActiveChats` now works correctly for any valid Request action.
+
+## [0.54.0] - 2018-07-21
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.54.0-sql-migration] on your database.
+### Added
+- `ChatAction` class to simplify chat action selection.
+- Telegram Games platform!
+- Ability to set custom MySQL port.
+### Changed
+- [:exclamation:][0.54.0-bc-rename-constants] Rename and ensure no redefinition of constants: `BASE_PATH` -> `TB_BASE_PATH`, `BASE_COMMANDS_PATH` -> `TB_BASE_COMMANDS_PATH`.
+
+## [0.53.0] - 2018-04-01
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.53.0-sql-migration] on your database.
+### Added
+- Implemented new changes for Bot API 3.6 (streamable InputMediaVideo, connected website).
+- `Telegram::getLastUpdateId()` method, returns ID of the last update that was processed.
+- `Telegram::useGetUpdatesWithoutDatabase()` method, enables `Telegram::handleGetUpdates()` to run without a database.
+### Changed
+- Updated Travis to use Trusty containers (for HHVM) and add PHP 7.2 to the tests.
+- Add debug log entry instead of throwing an exception for duplicate updates.
+- `Telegram::handleGetUpdates()` can now work without a database connection (not enabled by default).
+- Improved `/sendtochannel` and `/sendtoall` commands, using new message helpers.
+### Fixed
+- PHPCS fixes for updated CodeSniffer dependency.
+- Send messages correctly via `/sendtochannel`.
+
+## [0.52.0] - 2018-01-07
+### Fixed
+- Entity relations and wrong types for payments.
+- Allow empty string for `switch_inline_query` and `switch_inline_query_current_chat` (InlineKeyboardButton).
+- Fix empty date entry for User and Chat entities, using the current timestamp instead.
+
+## [0.51.0] - 2017-12-05
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.51.0-sql-migration] on your database.
+### Added
+- Implemented new changes for Bot API 3.5 (InputMedia, MediaGroup).
+
 ## [0.50.0] - 2017-10-17
 ### Added
 - Finish implementing payments, adding all missing type checks and docblock methods.
@@ -34,7 +89,7 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 - Channel selection when using `DB::selectChats()`.
 
 ## [0.48.0] - 2017-08-26
-**Note:** After updating to this version, you will need to execute the [SQL migration script][0.48.0-sql-migration] on your database.
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.48.0-sql-migration] on your database.
 ### Added
 - New entities, methods, update types and inline keyboard button for Payments (Bot API 3.0).
 - Add new methods, fields and objects for working with stickers (Bot API 3.2).
@@ -69,7 +124,7 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 - [:exclamation:][0.46.0-bc-request-class-refactor] Big refactor of the `Request` class, removing most custom method implementations.
 
 ## [0.45.0] - 2017-06-25
-**Note:** After updating to this version, you will need to execute the [SQL migration script][0.45.0-sql-migration] on your database.
+:exclamation: After updating to this version, you will need to execute the [SQL migration script][0.45.0-sql-migration] on your database.
 ### Added
 - Documents can be sent by providing its contents via Psr7 stream (as opposed to passing a file path).
 - Allow setting a custom Guzzle HTTP Client for requests (#511).
@@ -178,8 +233,14 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 ### Deprecated
 - Move `hideKeyboard` to `removeKeyboard`.
 
+[0.55.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.54.1-0.55.0.sql
+[0.55.0-bc-move-animation-out-of-games-namespace]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#move-animation-out-of-games-namespace
+[0.54.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.53.0-0.54.0.sql
+[0.54.0-bc-rename-constants]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#rename-constants
+[0.53.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.52.0-0.53.0.sql
+[0.51.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.50.0-0.51.0.sql
 [0.50.0-bc-messagegetcommand-return-value]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#messagegetcommand-return-value
-[0.48.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/develop/utils/db-schema-update/0.47.1-0.48.0.sql
+[0.48.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.47.1-0.48.0.sql
 [0.48.0-bc-correct-printerror]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#correct-printerror
 [0.47.0-bc-private-only-admin-commands]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#private-only-admin-commands
 [0.46.0-bc-request-class-refactor]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#request-class-refactor
@@ -191,6 +252,13 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 [example-bot]: https://github.com/php-telegram-bot/example-bot
 
 [Unreleased]: https://github.com/php-telegram-bot/core/compare/master...develop
+[0.55.1]: https://github.com/php-telegram-bot/core/compare/0.55.0...0.55.1
+[0.55.0]: https://github.com/php-telegram-bot/core/compare/0.54.1...0.55.0
+[0.54.1]: https://github.com/php-telegram-bot/core/compare/0.54.0...0.54.1
+[0.54.0]: https://github.com/php-telegram-bot/core/compare/0.53.0...0.54.0
+[0.53.0]: https://github.com/php-telegram-bot/core/compare/0.52.0...0.53.0
+[0.52.0]: https://github.com/php-telegram-bot/core/compare/0.51.0...0.52.0
+[0.51.0]: https://github.com/php-telegram-bot/core/compare/0.50.0...0.51.0
 [0.50.0]: https://github.com/php-telegram-bot/core/compare/0.49.0...0.50.0
 [0.49.0]: https://github.com/php-telegram-bot/core/compare/0.48.0...0.49.0
 [0.48.0]: https://github.com/php-telegram-bot/core/compare/0.47.1...0.48.0

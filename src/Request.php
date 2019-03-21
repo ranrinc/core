@@ -14,6 +14,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Longman\TelegramBot\Entities\File;
 use Longman\TelegramBot\Entities\ServerResponse;
+use Longman\TelegramBot\Exception\InvalidBotTokenException;
 use Longman\TelegramBot\Exception\TelegramException;
 
 /**
@@ -30,8 +31,10 @@ use Longman\TelegramBot\Exception\TelegramException;
  * @method static ServerResponse sendDocument(array $data)            Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
  * @method static ServerResponse sendSticker(array $data)             Use this method to send .webp stickers. On success, the sent Message is returned.
  * @method static ServerResponse sendVideo(array $data)               Use this method to send video files, Telegram clients support mp4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
+ * @method static ServerResponse sendAnimation(array $data)           Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future.
  * @method static ServerResponse sendVoice(array $data)               Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .ogg file encoded with OPUS (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future.
  * @method static ServerResponse sendVideoNote(array $data)           Use this method to send video messages. On success, the sent Message is returned.
+ * @method static ServerResponse sendMediaGroup(array $data)          Use this method to send a group of photos or videos as an album. On success, an array of the sent Messages is returned.
  * @method static ServerResponse sendLocation(array $data)            Use this method to send point on the map. On success, the sent Message is returned.
  * @method static ServerResponse editMessageLiveLocation(array $data) Use this method to edit live location messages sent by the bot or via the bot (for inline bots). A location can be edited until its live_period expires or editing is explicitly disabled by a call to stopMessageLiveLocation. On success, if the edited message was sent by the bot, the edited Message is returned, otherwise True is returned.
  * @method static ServerResponse stopMessageLiveLocation(array $data) Use this method to stop updating a live location message sent by the bot or via the bot (for inline bots) before live_period expires. On success, if the message was sent by the bot, the sent Message is returned, otherwise True is returned.
@@ -49,8 +52,8 @@ use Longman\TelegramBot\Exception\TelegramException;
  * @method static ServerResponse deleteChatPhoto(array $data)         Use this method to delete a chat photo. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse setChatTitle(array $data)            Use this method to change the title of a chat. Titles can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse setChatDescription(array $data)      Use this method to change the description of a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
- * @method static ServerResponse pinChatMessage(array $data)          Use this method to pin a message in a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
- * @method static ServerResponse unpinChatMessage(array $data)        Use this method to unpin a message in a supergroup chat. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
+ * @method static ServerResponse pinChatMessage(array $data)          Use this method to pin a message in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the ‘can_pin_messages’ admin right in the supergroup or ‘can_edit_messages’ admin right in the channel. Returns True on success.
+ * @method static ServerResponse unpinChatMessage(array $data)        Use this method to unpin a message in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the ‘can_pin_messages’ admin right in the supergroup or ‘can_edit_messages’ admin right in the channel. Returns True on success.
  * @method static ServerResponse leaveChat(array $data)               Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
  * @method static ServerResponse getChat(array $data)                 Use this method to get up to date information about the chat (current name of the user for one-on-one conversations, current username of a user, group or channel, etc.). Returns a Chat object on success.
  * @method static ServerResponse getChatAdministrators(array $data)   Use this method to get a list of administrators in a chat. On success, returns an Array of ChatMember objects that contains information about all chat administrators except other bots. If the chat is a group or a supergroup and no administrators were appointed, only the creator will be returned.
@@ -62,6 +65,7 @@ use Longman\TelegramBot\Exception\TelegramException;
  * @method static ServerResponse answerInlineQuery(array $data)       Use this method to send answers to an inline query. On success, True is returned.
  * @method static ServerResponse editMessageText(array $data)         Use this method to edit text and game messages sent by the bot or via the bot (for inline bots). On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
  * @method static ServerResponse editMessageCaption(array $data)      Use this method to edit captions of messages sent by the bot or via the bot (for inline bots). On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
+ * @method static ServerResponse editMessageMedia(array $data)        Use this method to edit audio, document, photo, or video messages. On success, if the edited message was sent by the bot, the edited Message is returned, otherwise True is returned.
  * @method static ServerResponse editMessageReplyMarkup(array $data)  Use this method to edit only the reply markup of messages sent by the bot or via the bot (for inline bots). On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
  * @method static ServerResponse deleteMessage(array $data)           Use this method to delete a message, including service messages, with certain limitations. Returns True on success.
  * @method static ServerResponse getStickerSet(array $data)           Use this method to get a sticker set. On success, a StickerSet object is returned.
@@ -73,6 +77,10 @@ use Longman\TelegramBot\Exception\TelegramException;
  * @method static ServerResponse sendInvoice(array $data)             Use this method to send invoices. On success, the sent Message is returned.
  * @method static ServerResponse answerShippingQuery(array $data)     If you sent an invoice requesting a shipping address and the parameter is_flexible was specified, the Bot API will send an Update with a shipping_query field to the bot. Use this method to reply to shipping queries. On success, True is returned.
  * @method static ServerResponse answerPreCheckoutQuery(array $data)  Once the user has confirmed their payment and shipping details, the Bot API sends the final confirmation in the form of an Update with the field pre_checkout_query. Use this method to respond to such pre-checkout queries. On success, True is returned.
+ * @method static ServerResponse setPassportDataErrors(array $data)   Informs a user that some of the Telegram Passport elements they provided contains errors. The user will not be able to re-submit their Passport to you until the errors are fixed (the contents of the field for which you returned the error must change). Returns True on success. Use this if the data submitted by the user doesn't satisfy the standards your service requires for any reason. For example, if a birthday date seems invalid, a submitted document is blurry, a scan shows evidence of tampering, etc. Supply some details in the error message to make sure the user knows how to correct the issues.
+ * @method static ServerResponse sendGame(array $data)                Use this method to send a game. On success, the sent Message is returned.
+ * @method static ServerResponse setGameScore(array $data)            Use this method to set the score of the specified user in a game. On success, if the message was sent by the bot, returns the edited Message, otherwise returns True. Returns an error, if the new score is not greater than the user's current score in the chat and force is False.
+ * @method static ServerResponse getGameHighScores(array $data)       Use this method to get data for high score tables. Will return the score of the specified user and several of his neighbors in a game. On success, returns an Array of GameHighScore objects.
  */
 class Request
 {
@@ -140,8 +148,10 @@ class Request
         'sendDocument',
         'sendSticker',
         'sendVideo',
+        'sendAnimation',
         'sendVoice',
         'sendVideoNote',
+        'sendMediaGroup',
         'sendLocation',
         'editMessageLiveLocation',
         'stopMessageLiveLocation',
@@ -172,6 +182,7 @@ class Request
         'answerInlineQuery',
         'editMessageText',
         'editMessageCaption',
+        'editMessageMedia',
         'editMessageReplyMarkup',
         'deleteMessage',
         'getStickerSet',
@@ -183,6 +194,10 @@ class Request
         'sendInvoice',
         'answerShippingQuery',
         'answerPreCheckoutQuery',
+        'setPassportDataErrors',
+        'sendGame',
+        'setGameScore',
+        'getGameHighScores',
     ];
 
     /**
@@ -455,13 +470,21 @@ class Request
 
         self::limitTelegramRequests($action, $data);
 
-        $response = json_decode(self::execute($action, $data), true);
+        $raw_response = self::execute($action, $data);
+        $response = json_decode($raw_response, true);
 
         if (null === $response) {
-            throw new TelegramException('Telegram returned an invalid response! Please review your bot name and API key.');
+            TelegramLog::debug($raw_response);
+            throw new TelegramException('Telegram returned an invalid response!');
         }
 
-        return new ServerResponse($response, $bot_username);
+        $response = new ServerResponse($response, $bot_username);
+
+        if (!$response->isOk() && $response->getErrorCode() === 401 && $response->getDescription() === 'Unauthorized') {
+            throw new InvalidBotTokenException();
+        }
+
+        return $response;
     }
 
     /**
@@ -586,9 +609,7 @@ class Request
         array $data,
         array $select_chats_params
     ) {
-        if (!method_exists(Request::class, $callback_function)) {
-            throw new TelegramException('Method "' . $callback_function . '" not found in class Request.');
-        }
+        self::ensureValidAction($callback_function);
 
         $chats = DB::selectChats($select_chats_params);
 
@@ -596,7 +617,7 @@ class Request
         if (is_array($chats)) {
             foreach ($chats as $row) {
                 $data['chat_id'] = $row['chat_id'];
-                $results[]       = call_user_func(Request::class . '::' . $callback_function, $data);
+                $results[]       = self::send($callback_function, $data);
             }
         }
 
@@ -651,21 +672,27 @@ class Request
                 'sendDocument',
                 'sendSticker',
                 'sendVideo',
+                'sendAnimation',
                 'sendVoice',
                 'sendVideoNote',
+                'sendMediaGroup',
                 'sendLocation',
                 'editMessageLiveLocation',
                 'stopMessageLiveLocation',
                 'sendVenue',
                 'sendContact',
                 'sendInvoice',
+                'sendGame',
+                'setGameScore',
                 'editMessageText',
                 'editMessageCaption',
+                'editMessageMedia',
                 'editMessageReplyMarkup',
                 'setChatTitle',
                 'setChatDescription',
                 'setChatStickerSet',
                 'deleteChatStickerSet',
+                'setPassportDataErrors',
             ];
 
             $chat_id           = isset($data['chat_id']) ? $data['chat_id'] : null;

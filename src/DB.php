@@ -75,7 +75,11 @@ class DB
             throw new TelegramException('MySQL credentials not provided!');
         }
 
-        $dsn     = 'mysql:host=' . $credentials['host'] . ';dbname=' . $credentials['database'];
+        $dsn = 'mysql:host=' . $credentials['host'] . ';dbname=' . $credentials['database'];
+        if (!empty($credentials['port'])) {
+            $dsn .= ';port=' . $credentials['port'];
+        }
+
         $options = [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $encoding];
         try {
             $pdo = new PDO($dsn, $credentials['user'], $credentials['password'], $options);
@@ -260,17 +264,13 @@ class DB
     /**
      * Convert from unix timestamp to timestamp
      *
-     * @param int $time Unix timestamp (if null, current timestamp is used)
+     * @param int $time Unix timestamp (if empty, current timestamp is used)
      *
      * @return string
      */
     protected static function getTimestamp($time = null)
     {
-        if ($time === null) {
-            $time = time();
-        }
-
-        return date('Y-m-d H:i:s', $time);
+        return date('Y-m-d H:i:s', $time ?: time());
     }
 
     /**
@@ -362,7 +362,7 @@ class DB
      * @return bool If the insert was successful
      * @throws TelegramException
      */
-    public static function insertUser(User $user, $date, Chat $chat = null)
+    public static function insertUser(User $user, $date = null, Chat $chat = null)
     {
         if (!self::isDbConnected()) {
             return false;
@@ -389,6 +389,7 @@ class DB
             $sth->bindValue(':first_name', $user->getFirstName());
             $sth->bindValue(':last_name', $user->getLastName());
             $sth->bindValue(':language_code', $user->getLanguageCode());
+            $date = $date ?: self::getTimestamp();
             $sth->bindValue(':created_at', $date);
             $sth->bindValue(':updated_at', $date);
 
@@ -429,7 +430,7 @@ class DB
      * @return bool If the insert was successful
      * @throws TelegramException
      */
-    public static function insertChat(Chat $chat, $date, $migrate_to_chat_id = null)
+    public static function insertChat(Chat $chat, $date = null, $migrate_to_chat_id = null)
     {
         if (!self::isDbConnected()) {
             return false;
@@ -466,6 +467,7 @@ class DB
             $sth->bindValue(':title', $chat->getTitle());
             $sth->bindValue(':username', $chat->getUsername());
             $sth->bindValue(':all_members_are_administrators', $chat->getAllMembersAreAdministrators(), PDO::PARAM_INT);
+            $date = $date ?: self::getTimestamp();
             $sth->bindValue(':created_at', $date);
             $sth->bindValue(':updated_at', $date);
 
@@ -493,10 +495,6 @@ class DB
 
         $update_id   = $update->getUpdateId();
         $update_type = $update->getUpdateType();
-
-        if (count(self::selectTelegramUpdate(1, $update_id)) === 1) {
-            throw new TelegramException('Duplicate update received!');
-        }
 
         // @todo Make this simpler: if ($message = $update->getMessage()) ...
         if ($update_type === 'message') {
@@ -830,20 +828,20 @@ class DB
                 INSERT IGNORE INTO `' . TB_MESSAGE . '`
                 (
                     `id`, `user_id`, `chat_id`, `date`, `forward_from`, `forward_from_chat`, `forward_from_message_id`,
-                    `forward_date`, `reply_to_chat`, `reply_to_message`, `text`, `entities`, `audio`, `document`,
-                    `photo`, `sticker`, `video`, `voice`, `video_note`, `caption`, `contact`,
+                    `forward_date`, `reply_to_chat`, `reply_to_message`, `media_group_id`, `text`, `entities`, `audio`, `document`,
+                    `animation`, `game`, `photo`, `sticker`, `video`, `voice`, `video_note`, `caption`, `contact`,
                     `location`, `venue`, `new_chat_members`, `left_chat_member`,
                     `new_chat_title`,`new_chat_photo`, `delete_chat_photo`, `group_chat_created`,
                     `supergroup_chat_created`, `channel_chat_created`,
-                    `migrate_from_chat_id`, `migrate_to_chat_id`, `pinned_message`
+                    `migrate_from_chat_id`, `migrate_to_chat_id`, `pinned_message`, `connected_website`, `passport_data`
                 ) VALUES (
                     :message_id, :user_id, :chat_id, :date, :forward_from, :forward_from_chat, :forward_from_message_id,
-                    :forward_date, :reply_to_chat, :reply_to_message, :text, :entities, :audio, :document,
-                    :photo, :sticker, :video, :voice, :video_note, :caption, :contact,
+                    :forward_date, :reply_to_chat, :reply_to_message, :media_group_id, :text, :entities, :audio, :document,
+                    :animation, :game, :photo, :sticker, :video, :voice, :video_note, :caption, :contact,
                     :location, :venue, :new_chat_members, :left_chat_member,
                     :new_chat_title, :new_chat_photo, :delete_chat_photo, :group_chat_created,
                     :supergroup_chat_created, :channel_chat_created,
-                    :migrate_from_chat_id, :migrate_to_chat_id, :pinned_message
+                    :migrate_from_chat_id, :migrate_to_chat_id, :pinned_message, :connected_website, :passport_data
                 )
             ');
 
@@ -878,10 +876,13 @@ class DB
             $sth->bindValue(':reply_to_chat', $reply_to_chat_id);
             $sth->bindValue(':reply_to_message', $reply_to_message_id);
 
+            $sth->bindValue(':media_group_id', $message->getMediaGroupId());
             $sth->bindValue(':text', $message->getText());
             $sth->bindValue(':entities', $t = self::entitiesArrayToJson($message->getEntities(), null));
             $sth->bindValue(':audio', $message->getAudio());
             $sth->bindValue(':document', $message->getDocument());
+            $sth->bindValue(':animation', $message->getAnimation());
+            $sth->bindValue(':game', $message->getGame());
             $sth->bindValue(':photo', $t = self::entitiesArrayToJson($message->getPhoto(), null));
             $sth->bindValue(':sticker', $message->getSticker());
             $sth->bindValue(':video', $message->getVideo());
@@ -902,6 +903,8 @@ class DB
             $sth->bindValue(':migrate_from_chat_id', $message->getMigrateFromChatId());
             $sth->bindValue(':migrate_to_chat_id', $message->getMigrateToChatId());
             $sth->bindValue(':pinned_message', $message->getPinnedMessage());
+            $sth->bindValue(':connected_website', $message->getConnectedWebsite());
+            $sth->bindValue(':passport_data', $message->getPassportData());
 
             return $sth->execute();
         } catch (PDOException $e) {
