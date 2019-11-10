@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the TelegramBot package.
  *
@@ -12,7 +13,7 @@ namespace Longman\TelegramBot\Entities;
 
 use Exception;
 use Longman\TelegramBot\Entities\InlineQuery\InlineEntity;
-use Longman\TelegramBot\TelegramLog;
+use Longman\TelegramBot\Entities\InputMedia\InputMedia;
 
 /**
  * Class Entity
@@ -33,8 +34,6 @@ abstract class Entity
      *
      * @param array  $data
      * @param string $bot_username
-     *
-     * @throws \Longman\TelegramBot\Exception\TelegramException
      */
     public function __construct($data, $bot_username = '')
     {
@@ -96,8 +95,6 @@ abstract class Entity
 
     /**
      * Perform any special entity validation
-     *
-     * @throws \Longman\TelegramBot\Exception\TelegramException
      */
     protected function validate()
     {
@@ -142,14 +139,20 @@ abstract class Entity
                 $sub_entities = $this->subEntities();
 
                 if (isset($sub_entities[$property_name])) {
-                    return new $sub_entities[$property_name]($property, $this->getProperty('bot_username'));
+                    $class = $sub_entities[$property_name];
+
+                    if (is_array($class)) {
+                        return $this->makePrettyObjectArray(reset($class), $property_name);
+                    }
+
+                    return new $class($property, $this->getProperty('bot_username'));
                 }
 
                 return $property;
             }
         } elseif ($action === 'set') {
             // Limit setters to specific classes.
-            if ($this instanceof InlineEntity || $this instanceof Keyboard || $this instanceof KeyboardButton) {
+            if ($this instanceof InlineEntity || $this instanceof InputMedia || $this instanceof Keyboard || $this instanceof KeyboardButton) {
                 $this->$property_name = $args[0];
 
                 return $this;

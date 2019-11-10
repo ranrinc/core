@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the TelegramBot package.
  *
@@ -47,7 +48,7 @@ class InlineQuery extends Entity
      */
     public function answer(array $results, array $data = [])
     {
-        return Request::answerCallbackQuery(array_merge([
+        return Request::answerInlineQuery(array_merge([
             'callback_query_id' => $this->getId(),
             'results'           => $results,
         ], $data));

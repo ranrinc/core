@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the TelegramBot package.
  *
@@ -85,7 +86,7 @@ class TestHelpers
      *
      * @param array $data Pass custom data array if needed
      *
-     * @return \Longman\TelegramBot\Entities\Update
+     * @return Update
      */
     public static function getFakeUpdateObject($data = null)
     {
@@ -107,7 +108,7 @@ class TestHelpers
      *
      * @param string $command_text
      *
-     * @return \Longman\TelegramBot\Entities\Update
+     * @return Update
      */
     public static function getFakeUpdateCommandObject($command_text)
     {
@@ -129,7 +130,7 @@ class TestHelpers
      *
      * @param array $data Pass custom data array if needed
      *
-     * @return \Longman\TelegramBot\Entities\User
+     * @return User
      */
     public static function getFakeUserObject(array $data = [])
     {
@@ -143,7 +144,7 @@ class TestHelpers
      *
      * @param array $data Pass custom data array if needed
      *
-     * @return \Longman\TelegramBot\Entities\Chat
+     * @return Chat
      */
     public static function getFakeChatObject(array $data = [])
     {
@@ -179,7 +180,7 @@ class TestHelpers
      * @param array $user_data    Pass custom user data array if needed
      * @param array $chat_data    Pass custom chat data array if needed
      *
-     * @return \Longman\TelegramBot\Entities\Message
+     * @return Message
      */
     public static function getFakeMessageObject(array $message_data = [], array $user_data = [], array $chat_data = [])
     {
@@ -223,7 +224,7 @@ class TestHelpers
     /**
      * Empty all tables for the passed database
      *
-     * @param  array $credentials
+     * @param array $credentials
      */
     public static function emptyDb(array $credentials)
     {
